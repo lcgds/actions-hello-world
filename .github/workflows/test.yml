@@ -1,0 +1,63 @@
+# Modelo: Criar e testar Node.js
+# É possível criar um fluxo de trabalho de integração contínua (CI) para criar e testar o seu projeto Node.js.
+# Para mais informacoes, acesse: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Minify e Commit
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ] 
+  workflow_dispatch: # Permite execução manual
+
+permissions:
+  contents: write # Dá permissão de escrita no conteúdo do repositório
+
+jobs:
+  minify:
+    runs-on: ubuntu-latest
+    
+    steps:
+    
+    - uses: actions/checkout@v4
+      with:
+        persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
+        fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
+    
+    - name: Executa NPM para instalar dependencias
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16.x
+        cache: 'npm'
+    - run: npm ci #clean installation
+    - run: npm fund
+    
+    - name: Executa Minify em arquivos HTML, CSS e Javascript
+      run: |        
+        npx minify ./src/index.html > ./public/index.min.html
+        
+        npx minify ./src/style.css > ./public/style.min.css
+
+        npx minify ./src/script.js > ./public/script.min.js
+  
+  commit:
+    runs-on: ubuntu-latest
+    needs: minify
+    steps:
+
+    - name: Configura Perfil do Bot do Github Actions
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            
+        git config --local user.name "Bot do Github Actions"
+  
+    - name: Executa Commit
+      run: git commit -a -m "Github Actions - Minify"
+    
+    - name: Executa Push
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: main
+        force: true
