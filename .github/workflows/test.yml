@@ -24,14 +24,16 @@ jobs:
       with:
         persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
         fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
+        
     
     - name: Executa NPM para instalar dependencias
       uses: actions/setup-node@v3
       with:
         node-version: 16.x
         cache: 'npm'
-    - run: npm ci #clean installation
+    - run: npm ci #clean-install
     - run: npm fund
+    
     
     - name: Executa Minify em arquivos HTML, CSS e Javascript
       run: |        
@@ -40,20 +42,18 @@ jobs:
         npx minify ./src/style.css > ./public/style.min.css
 
         npx minify ./src/script.js > ./public/script.min.js
-  
-  commit:
-    runs-on: ubuntu-latest
-    needs: minify
-    steps:
+        
 
     - name: Configura Perfil do Bot do Github Actions
       run: |
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
             
         git config --local user.name "Bot do Github Actions"
+        
   
     - name: Executa Commit
       run: git commit -a -m "Github Actions - Minify"
+      
     
     - name: Executa Push
       uses: ad-m/github-push-action@master
