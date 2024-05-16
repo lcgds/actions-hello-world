@@ -7,8 +7,7 @@ name: Minify e Commit
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ] 
+    paths: "src/**" 
   workflow_dispatch: # Permite execução manual
 
 permissions:
